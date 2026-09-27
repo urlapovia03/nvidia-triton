@@ -22,7 +22,7 @@
 ### FastAPI Gateway
 
 - Принимает изображения через `multipart/form-data` (`file`) или form-поле base64 (`image`).
-- Препроцессинг: RGB, resize `224x224`, сырые пиксели `[0, 255]` — нормализация (ImageNet mean/std) уже запечена внутрь самой ONNX-модели.
+- Препроцессинг: RGB, resize `224x224`, сырые пиксели `[0, 255]` — нормализация (ImageNet mean/std) внутри самой ONNX-модели.
 - Вызывает Triton по gRPC через threadpool (`run_in_threadpool`), чтобы блокирующий вызов не сериализовал параллельные запросы и не мешал Dynamic Batching.
 - Возвращает предсказанный класс, confidence, probabilities и время инференса.
 - Предоставляет Swagger UI для ручной проверки `/predict` с явными полями `file`/`image`.
@@ -257,7 +257,6 @@ Grafana автоматически загружает:
 - datasource: `grafana/provisioning/datasources/datasources.yml`
 - dashboard: `grafana/provisioning/dashboards/triton.json`
 
-> ⚠️ По умолчанию Triton отдаёт латентность как простые счётчики (накопленную сумму микросекунд), а не гистограмму — метрик вида `..._bucket` для `histogram_quantile()` не существует. Чтобы получить перцентили p50/p95/p99, в `docker-compose.yml` включён флаг `--metrics-config summary_latencies=true`; после этого квантили доступны напрямую как `nv_inference_request_summary_us{quantile="0.5"}`.
 
 Основные панели:
 
@@ -269,7 +268,6 @@ Grafana автоматически загружает:
 | Pending Requests | `nv_inference_pending_request_count{model="image_classifier"}` |
 | Total Requests | `nv_inference_request_success` и `nv_inference_request_failure` |
 
-`<СКРИНШОТ ДАШБОРДА GRAFANA>`
 
 ## Нагрузочное тестирование
 
