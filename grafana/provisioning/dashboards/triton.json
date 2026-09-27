@@ -1,0 +1,131 @@
+{
+  "uid": "triton-image-classifier",
+  "title": "Triton Image Classifier (Animals)",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Requests per Second",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "expr": "rate(nv_inference_request_success{model=\"image_classifier\"}[1m])",
+          "legendFormat": "success"
+        },
+        {
+          "expr": "rate(nv_inference_request_failure{model=\"image_classifier\"}[1m])",
+          "legendFormat": "failure"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Inference Latency (p50/p95/p99)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "expr": "nv_inference_request_summary_us{model=\"image_classifier\", quantile=\"0.5\"}",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "nv_inference_request_summary_us{model=\"image_classifier\", quantile=\"0.95\"}",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "nv_inference_request_summary_us{model=\"image_classifier\", quantile=\"0.99\"}",
+          "legendFormat": "p99"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Queue Time, us",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "expr": "rate(nv_inference_queue_duration_us{model=\"image_classifier\"}[1m]) / rate(nv_inference_count{model=\"image_classifier\"}[1m])",
+          "legendFormat": "avg queue time"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Pending Requests",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "expr": "nv_inference_pending_request_count{model=\"image_classifier\"}",
+          "legendFormat": "pending"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Total Requests (success / failure)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "expr": "nv_inference_request_success{model=\"image_classifier\"}",
+          "legendFormat": "success"
+        },
+        {
+          "expr": "nv_inference_request_failure{model=\"image_classifier\"}",
+          "legendFormat": "failure"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      }
+    }
+  ]
+}
