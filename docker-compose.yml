@@ -1,0 +1,79 @@
+services:
+  triton:
+    image: nvcr.io/nvidia/tritonserver:24.01-py3
+    platform: linux/amd64
+    container_name: triton-server
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    volumes:
+      - ./model_repository:/models:ro
+    command: >
+      tritonserver
+      --model-repository=/models
+      --strict-model-config=true
+      --log-verbose=1
+      --metrics-config summary_latencies=true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v2/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  api:
+    build: ./api
+    container_name: image-classifier-api
+    ports:
+      - "8080:8080"
+    environment:
+      TRITON_URL: triton:8001
+      MODEL_NAME: image_classifier
+      IMG_SIZE: 224
+      CLASSES_PATH: /models/image_classifier/class_names.json
+    volumes:
+      - ./model_repository:/models:ro
+    depends_on:
+      triton:
+        condition: service_healthy
+
+  streamlit:
+    build: ./streamlit_app
+    container_name: streamlit-ui
+    ports:
+      - "8501:8501"
+    environment:
+      API_URL: http://api:8080/predict
+    depends_on:
+      - api
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - triton
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+  grafana_data:
